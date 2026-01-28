@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لعبة XO الحديثة</title>
+  <style>
+    :root{
+      --bg1:#0b1020;
+      --bg2:#111b3a;
+      --glass:rgba(255,255,255,.08);
+      --glass2:rgba(255,255,255,.12);
+      --line:rgba(255,255,255,.18);
+      --text:#f5f7ff;
+      --muted:rgba(245,247,255,.72);
+      --good:#55f0c4;
+      --bad:#ff6b8b;
+      --warn:#ffd166;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      color:var(--text);
+      min-height:100svh;
+      background:
+        radial-gradient(1200px 800px at 15% 10%, #2a6bff33, transparent 55%),
+        radial-gradient(900px 600px at 90% 15%, #ff4bd133, transparent 55%),
+        radial-gradient(900px 600px at 50% 95%, #55f0c433, transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      display:flex;
+      flex-direction:column;
+    }
+    header{
+      padding:26px 16px 10px;
+      text-align:center;
+    }
+    header h1{
+      margin:0 0 6px;
+      font-size:clamp(20px, 3vw, 34px);
+      letter-spacing:.2px;
+    }
+    header p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .wrap{
+      width:min(1020px, 92vw);
+      margin: 12px auto 120px;
+      display:grid;
+      gap:16px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 920px){
+      .wrap{ grid-template-columns: 410px 1fr; align-items:start; }
+    }
+
+    .card{
+      background:linear-gradient(180deg, var(--glass), rgba(255,255,255,.06));
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(90deg, rgba(255,255,255,.09), transparent);
+    }
+    .card .hd strong{font-size:14px}
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      background:rgba(255,255,255,.05);
+      white-space:nowrap;
+    }
+    .card .bd{ padding:16px; }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.22);
+      color:var(--text);
+      outline:none;
+    }
+    input::placeholder{ color: rgba(245,247,255,.45); }
+    input:focus, select:focus{
+      border-color: rgba(85,240,196,.55);
+      box-shadow: 0 0 0 4px rgba(85,240,196,.12);
+    }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .row > *{ flex:1 1 160px; }
+
+    .hr{ height:1px; background:var(--line); margin:12px 0; }
+
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button{
+      border:0;
+      padding:12px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:800;
+      letter-spacing:.2px;
+      color:var(--text);
+      background:linear-gradient(180deg, rgba(85,240,196,.92), rgba(85,240,196,.72));
+      box-shadow: 0 12px 30px rgba(85,240,196,.22);
+      flex:1 1 170px;
+    }
+    button.secondary{
+      background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08));
+      border:1px solid var(--line);
+      box-shadow:none;
+      font-weight:700;
+    }
+    button.danger{
+      background:linear-gradient(180deg, rgba(255,107,139,.9), rgba(255,107,139,.68));
+      box-shadow: 0 12px 30px rgba(255,107,139,.18);
+    }
+    button:disabled{ opacity:.55; cursor:not-allowed; box-shadow:none; }
+
+    .status{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 16px;
+      border-radius: var(--radius);
+      background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+      border:1px solid var(--line);
+    }
+    .status .left{ display:flex; flex-direction:column; gap:4px; }
+    .status .turn{ font-size:15px; font-weight:900; }
+    .status .sub{ font-size:12px; color:var(--muted); }
+
+    .score{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width: 130px;
+      justify-content:space-between;
+    }
+    .pill b{ color:var(--text); font-size:13px; }
+
+    .board{
+      width:min(520px, 92vw);
+      margin-inline:auto;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      padding:14px;
+      border-radius: var(--radius);
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow: var(--shadow);
+    }
+    .cell{
+      aspect-ratio: 1/1;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.16));
+      display:grid;
+      place-items:center;
+      font-size:clamp(34px, 6vw, 56px);
+      font-weight:900;
+      user-select:none;
+      transition: transform .12s ease, border-color .2s ease, background .2s ease;
+    }
+    .cell:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.32);
+      background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(0,0,0,.12));
+    }
+    .cell:active{ transform: translateY(0px) scale(.98); }
+    .cell.disabled{ cursor:not-allowed; opacity:.88; }
+
+    .x{ color: var(--warn); text-shadow: 0 10px 28px rgba(255,209,102,.18); }
+    .o{ color: var(--good); text-shadow: 0 10px 28px rgba(85,240,196,.18); }
+
+    .note{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.7;
+      margin:0;
+    }
+
+    .toast{
+      position:fixed;
+      top:16px;
+      left:50%;
+      transform:translateX(-50%);
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      display:none;
+      gap:10px;
+      align-items:center;
+      width:min(560px, 92vw);
+      z-index:50;
+    }
+    .toast.show{ display:flex; }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: var(--good);
+      box-shadow: 0 0 0 5px rgba(85,240,196,.15);
+      flex:0 0 auto;
+    }
+    .toast .msg{ font-size:13px; color:var(--text); }
+    .toast .msg small{ display:block; color:var(--muted); margin-top:2px; }
+
+    /* شاشة البداية */
+    .overlay{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background: radial-gradient(900px 600px at 20% 10%, #2a6bff33, transparent 55%),
+                  radial-gradient(700px 500px at 80% 30%, #ff4bd133, transparent 55%),
+                  rgba(0,0,0,.35);
+      backdrop-filter: blur(8px);
+      z-index:60;
+    }
+    .modal{
+      width:min(820px, 100%);
+      border-radius:22px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal .top{
+      padding:18px 18px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .modal h2{ margin:0; font-size:18px; }
+    .modal p{ margin:4px 0 0; color:var(--muted); font-size:13px; line-height:1.7; }
+    .modal .body{ padding:16px 18px 18px; }
+    .modal .body .note{ margin-top:10px; }
+
+    footer{
+      position:fixed;
+      bottom:0; left:0; right:0;
+      padding:12px 14px;
+      background:rgba(0,0,0,.45);
+      border-top:1px solid var(--line);
+      backdrop-filter: blur(10px);
+      z-index:40;
+    }
+    .footerInner{
+      width:min(1020px, 92vw);
+      margin:0 auto;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px 14px;
+      align-items:center;
+      justify-content:space-between;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .footerInner b{ color:var(--text); }
+  </style>
+</head>
+<body>
+  <!-- إشعارات -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span class="dot" id="toastDot"></span>
+    <div class="msg" id="toastMsg"></div>
+  </div>
+
+  <!-- شاشة البداية -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="top">
+        <div>
+          <h2>🎮 ابدأ لعبة XO</h2>
+          <p>اختر لاعب واحد ضد الكمبيوتر أو لاعبين، ثم أدخل الأسماء واضغط "ابدأ".</p>
+        </div>
+        <span class="badge" id="startBadge">جاهز</span>
+      </div>
+      <div class="body">
+        <div class="row">
+          <div>
+            <label for="mode">عدد اللاعبين</label>
+            <select id="mode">
+              <option value="1">لاعب واحد (ضد الكمبيوتر)</option>
+              <option value="2">لاعبين (محلي)</option>
+            </select>
+          </div>
+          <div>
+            <label for="difficulty">مستوى الكمبيوتر</label>
+            <select id="difficulty">
+              <option value="easy">سهل</option>
+              <option value="smart">ذكي</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <div>
+            <label for="p1">اسم اللاعب 1</label>
+            <input id="p1" placeholder="مثال: إبراهيم" />
+          </div>
+          <div id="p2Wrap">
+            <label for="p2">اسم اللاعب 2</label>
+            <input id="p2" placeholder="مثال: أحمد" />
+          </div>
+        </div>
+
+        <div class="btns">
+          <button id="startBtn">ابدأ اللعبة</button>
+          <button class="secondary" id="closeBtn" type="button">إلغاء</button>
+        </div>
+
+        <p class="note">⭐ القاعدة: من يضع 3 رموز على خط واحد يفوز (أفقي/عمودي/قطري).</p>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <h1>لعبة XO (إكس - أو)</h1>
+    <p>واجهة عربية + تصميم حديث + يعمل على الجوال والكمبيوتر — يدعم لاعب واحد أو لاعبين</p>
+  </header>
+
+  <main class="wrap">
+    <!-- إعدادات مختصرة -->
+    <section class="card">
+      <div class="hd">
+        <strong>لوحة التحكم</strong>
+        <span class="badge" id="modeBadge">لم تبدأ</span>
+      </div>
+      <div class="bd">
+        <p class="note" id="helpText">
+          اضغط "تغيير الأسماء/الوضع" للعودة لشاشة البداية. ثم ابدأ اللعب بالضغط على أي مربع.
+        </p>
+        <div class="btns">
+          <button class="secondary" id="openStart">تغيير الأسماء / الوضع</button>
+          <button id="resetBtn" disabled>إعادة الجولة</button>
+          <button class="danger" id="fullResetBtn">تصفير النتائج</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- اللعبة -->
+    <section style="display:grid; gap:14px;">
+      <div class="status">
+        <div class="left">
+          <div class="turn" id="turnText">جاهز؟ افتح شاشة البداية وابدأ</div>
+          <div class="sub" id="subText">الدور سيظهر هنا</div>
+        </div>
+        <div class="score">
+          <div class="pill"><span id="p1Label">لاعب 1</span><b id="p1Score">0</b></div>
+          <div class="pill"><span id="drawLabel">تعادل</span><b id="draws">0</b></div>
+          <div class="pill"><span id="p2Label">لاعب 2</span><b id="p2Score">0</b></div>
+        </div>
+      </div>
+
+      <div class="board" id="board" aria-label="لوحة لعبة XO">
+        <div class="cell" data-i="0" role="button" aria-label="مربع 1"></div>
+        <div class="cell" data-i="1" role="button" aria-label="مربع 2"></div>
+        <div class="cell" data-i="2" role="button" aria-label="مربع 3"></div>
+        <div class="cell" data-i="3" role="button" aria-label="مربع 4"></div>
+        <div class="cell" data-i="4" role="button" aria-label="مربع 5"></div>
+        <div class="cell" data-i="5" role="button" aria-label="مربع 6"></div>
+        <div class="cell" data-i="6" role="button" aria-label="مربع 7"></div>
+        <div class="cell" data-i="7" role="button" aria-label="مربع 8"></div>
+        <div class="cell" data-i="8" role="button" aria-label="مربع 9"></div>
+      </div>
+
+      <div class="card" style="box-shadow:none">
+        <div class="bd">
+          <p class="note" id="modeNote">
+            في لاعب واحد: أنت "X" والكمبيوتر "O". في لاعبين: اللاعب 1 "X" واللاعب 2 "O".
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- الفوتر الإجباري -->
+  <footer>
+    <div class="footerInner">
+      <div>Student Name: <b>IBRAHIM AHMED I JOUR</b> (ابراهيم احمد بن ابراهيم جور)</div>
+      <div>Student ID: <b>446009124</b></div>
+      <div>Supervised by: <b>Mohammed Ahmed Jabali</b></div>
+    </div>
+  </footer>
+
+  <script>
+    // عناصر
+    const overlay = document.getElementById('overlay');
+    const startBadge = document.getElementById('startBadge');
+    const modeEl = document.getElementById('mode');
+    const diffEl = document.getElementById('difficulty');
+    const p1El = document.getElementById('p1');
+    const p2El = document.getElementById('p2');
+    const p2Wrap = document.getElementById('p2Wrap');
+    const startBtn = document.getElementById('startBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const openStart = document.getElementById('openStart');
+
+    const modeBadge = document.getElementById('modeBadge');
+    const turnText = document.getElementById('turnText');
+    const subText = document.getElementById('subText');
+    const helpText = document.getElementById('helpText');
+    const modeNote = document.getElementById('modeNote');
+
+    const cells = Array.from(document.querySelectorAll('.cell'));
+
+    const p1Label = document.getElementById('p1Label');
+    const p2Label = document.getElementById('p2Label');
+    const p1ScoreEl = document.getElementById('p1Score');
+    const p2ScoreEl = document.getElementById('p2Score');
+    const drawsEl = document.getElementById('draws');
+
+    const resetBtn = document.getElementById('resetBtn');
+    const fullResetBtn = document.getElementById('fullResetBtn');
+
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toastDot = document.getElementById('toastDot');
+
+    // الحالة
+    let started = false;
+    let locked = false;
+    let mode = 1;
+    let difficulty = 'easy';
+    let board = Array(9).fill(null);
+    let current = 'X';
+    let players = { X: 'لاعب 1', O: 'لاعب 2' };
+    let scores = { X: 0, O: 0, D: 0 };
+
+    const wins = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function showToast(text, type='ok', sub=''){
+      toastDot.style.background = (type==='ok') ? 'var(--good)' : (type==='bad' ? 'var(--bad)' : 'var(--warn)');
+      toastMsg.innerHTML = `${text}${sub? `<small>${sub}</small>`:''}`;
+      toast.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=> toast.classList.remove('show'), 2400);
+    }
+
+    function normalizeName(v, fallback){
+      const s = (v || '').trim();
+      return s.length ? s : fallback;
+    }
+
+    function updateStartScreen(){
+      mode = Number(modeEl.value);
+      difficulty = diffEl.value;
+
+      if(mode === 1){
+        p2Wrap.style.display = 'none';
+        diffEl.disabled = false;
+        startBadge.textContent = 'لاعب واحد';
+      }else{
+        p2Wrap.style.display = '';
+        diffEl.disabled = true;
+        startBadge.textContent = 'لاعبين';
+      }
+    }
+
+    function updateUI(){
+      p1Label.textContent = players.X || 'لاعب 1';
+      p2Label.textContent = players.O || (mode===1 ? 'الكمبيوتر' : 'لاعب 2');
+
+      p1ScoreEl.textContent = scores.X;
+      p2ScoreEl.textContent = scores.O;
+      drawsEl.textContent = scores.D;
+
+      modeBadge.textContent = started ? (mode===1 ? 'لاعب واحد' : 'لاعبين') : 'لم تبدأ';
+
+      modeNote.textContent = (mode===1)
+        ? 'أنت تلعب بـ "X" والكمبيوتر يلعب بـ "O".'
+        : 'لاعبين: اللاعب 1 = "X" واللاعب 2 = "O".';
+    }
+
+    function renderBoard(){
+      cells.forEach((c, i)=>{
+        const v = board[i];
+        c.textContent = v ? v : '';
+        c.classList.toggle('disabled', !!v || !started || locked);
+        c.classList.remove('x','o');
+        if(v==='X') c.classList.add('x');
+        if(v==='O') c.classList.add('o');
+      });
+    }
+
+    function checkWinner(b){
+      for(const line of wins){
+        const [a,b2,c] = line;
+        if(b[a] && b[a]===b[b2] && b[a]===b[c]){
+          return { winner: b[a], line };
+        }
+      }
+      if(b.every(Boolean)) return { winner: 'D', line: null };
+      return null;
+    }
+
+    function setStatus(){
+      if(!started){
+        turnText.textContent = 'جاهز؟ افتح شاشة البداية وابدأ';
+        subText.textContent = 'اختر الوضع وأدخل الأسماء';
+        return;
+      }
+      const name = (current==='X') ? players.X : players.O;
+      const who = (mode===1 && current==='O') ? 'دور الكمبيوتر 🤖' : `دور: ${name}`;
+      turnText.textContent = who;
+      subText.textContent = `الرمز الحالي: ${current}`;
+    }
+
+    function resetRound(silent=false){
+      board = Array(9).fill(null);
+      current = 'X';
+      locked = false;
+      renderBoard();
+      setStatus();
+      resetBtn.disabled = false;
+      if(!silent) showToast('تمت إعادة الجولة ✅', 'ok');
+    }
+
+    function fullReset(){
+      scores = { X:0, O:0, D:0 };
+      updateUI();
+      resetRound(true);
+      showToast('تم تصفير النتائج ✅', 'warn');
+    }
+
+    function highlightLine(line){
+      if(!line) return;
+      line.forEach(i=>{
+        cells[i].style.borderColor = 'rgba(255,255,255,.55)';
+        cells[i].style.boxShadow = '0 0 0 4px rgba(255,209,102,.10)';
+      });
+      setTimeout(()=>{
+        line.forEach(i=>{
+          cells[i].style.borderColor = '';
+          cells[i].style.boxShadow = '';
+        });
+      }, 1600);
+    }
+
+    function endGame(result){
+      const { winner, line } = result;
+
+      if(winner === 'D'){
+        scores.D++;
+        updateUI();
+        showToast('تعادل 🤝', 'warn', 'جربوا مرة ثانية');
+      }else{
+        scores[winner]++;
+        updateUI();
+
+        if(mode===1 && winner==='O'){
+          showToast('فاز الكمبيوتر 🤖', 'ok', 'حاول مرة ثانية!');
+        }else{
+          const winnerName = (winner==='X') ? players.X : players.O;
+          showToast(`الفائز: ${winnerName} 🎉`, 'ok', `الرمز: ${winner}`);
+        }
+        highlightLine(line);
+      }
+
+      locked = true;
+      renderBoard();
+      turnText.textContent = 'انتهت الجولة';
+      subText.textContent = 'اضغط "إعادة الجولة" للعب مرة ثانية';
+    }
+
+    function availableMoves(b){
+      const moves = [];
+      for(let i=0;i<9;i++) if(!b[i]) moves.push(i);
+      return moves;
+    }
+
+    function findImmediate(sym){
+      for(const m of availableMoves(board)){
+        const copy = board.slice();
+        copy[m] = sym;
+        const r = checkWinner(copy);
+        if(r && r.winner === sym) return m;
+      }
+      return null;
+    }
+
+    function computerMove(){
+      const moves = availableMoves(board);
+      if(moves.length === 0) return;
+
+      let choice = moves[Math.floor(Math.random() * moves.length)];
+
+      if(difficulty === 'smart'){
+        // يفوز لو يقدر
+        choice = findImmediate('O') ?? choice;
+        // يمنع اللاعب
+        choice = findImmediate('X') ?? choice;
+        // الوسط
+        if(board[4] === null) choice = 4;
+        // زاوية
+        const corners = [0,2,6,8].filter(i=> board[i]===null);
+        if(corners.length) choice = corners[Math.floor(Math.random()*corners.length)];
+      }
+
+      board[choice] = 'O';
+      const result = checkWinner(board);
+      if(result){ renderBoard(); endGame(result); return; }
+
+      current = 'X';
+      renderBoard();
+    }
+
+    function makeMove(i){
+      if(!started || locked) return;
+      if(board[i]) return;
+
+      board[i] = current;
+      renderBoard();
+
+      const result = checkWinner(board);
+      if(result){ endGame(result); return; }
+
+      current = (current==='X') ? 'O' : 'X';
+      setStatus();
+
+      if(mode===1 && current==='O'){
+        locked = true;
+        renderBoard();
+        setTimeout(()=>{
+          computerMove();
+          const r2 = checkWinner(board);
+          if(r2){ endGame(r2); return; }
+          locked = false;
+          current = 'X';
+          renderBoard();
+          setStatus();
+        }, 450);
+      }
+    }
+
+    function startGame(){
+      updateStartScreen();
+      mode = Number(modeEl.value);
+      difficulty = diffEl.value;
+
+      const p1 = normalizeName(p1El.value, 'لاعب 1');
+      players.X = p1;
+
+      if(mode === 1){
+        players.O = 'الكمبيوتر';
+      }else{
+        players.O = normalizeName(p2El.value, 'لاعب 2');
+      }
+
+      started = true;
+      locked = false;
+
+      overlay.style.display = 'none';
+      updateUI();
+      resetRound(true);
+      showToast('بدأت اللعبة ✅', 'ok', (mode===1 ? 'أنت ضد الكمبيوتر' : 'لاعب ضد لاعب'));
+    }
+
+    // أحداث
+    modeEl.addEventListener('change', updateStartScreen);
+    diffEl.addEventListener('change', updateStartScreen);
+
+    startBtn.addEventListener('click', startGame);
+    closeBtn.addEventListener('click', ()=> overlay.style.display = 'none');
+    openStart.addEventListener('click', ()=> overlay.style.display = 'flex');
+
+    resetBtn.addEventListener('click', ()=>{
+      locked = false;
+      started = true;
+      resetRound();
+    });
+
+    fullResetBtn.addEventListener('click', ()=>{
+      locked = false;
+      started = true;
+      fullReset();
+    });
+
+    cells.forEach(cell=>{
+      cell.addEventListener('click', ()=>{
+        const i = Number(cell.dataset.i);
+        if(locked) return;
+        makeMove(i);
+      });
+    });
+
+    // تشغيل أولي
+    updateStartScreen();
+    updateUI();
+    renderBoard();
+    setStatus();
+  </script>
+</body>
+</html>
